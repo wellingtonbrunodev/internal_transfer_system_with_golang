@@ -6,6 +6,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// AccountRepository implements AccountRepository interface.
 type AccountRepository struct {
 	db *sql.DB
 }
@@ -14,6 +15,7 @@ func NewAccountRepository(db *sql.DB) *AccountRepository {
 	return &AccountRepository{db: db}
 }
 
+//Create inserts new account info to database
 func (r *AccountRepository) Create(ctx context.Context, id int64, balance decimal.Decimal) error {
 	query := `
 		INSERT INTO accounts (id, balance)
@@ -24,6 +26,7 @@ func (r *AccountRepository) Create(ctx context.Context, id int64, balance decima
 	return err
 }
 
+//GetByID reads account data from database by using the account id
 func (r *AccountRepository) GetByID(ctx context.Context, id int64) (int64, decimal.Decimal, error) {
 	query := `
 		SELECT id, balance

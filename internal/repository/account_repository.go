@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"github.com/shopspring/decimal"
 )
 
 type AccountRepository struct {
@@ -13,7 +14,7 @@ func NewAccountRepository(db *sql.DB) *AccountRepository {
 	return &AccountRepository{db: db}
 }
 
-func (r *AccountRepository) Create(ctx context.Context, id int64, balance string) error {
+func (r *AccountRepository) Create(ctx context.Context, id int64, balance decimal.Decimal) error {
 	query := `
 		INSERT INTO accounts (id, balance)
 		VALUES ($1, $2)
@@ -23,7 +24,7 @@ func (r *AccountRepository) Create(ctx context.Context, id int64, balance string
 	return err
 }
 
-func (r *AccountRepository) GetByID(ctx context.Context, id int64) (int64, string, error) {
+func (r *AccountRepository) GetByID(ctx context.Context, id int64) (int64, decimal.Decimal, error) {
 	query := `
 		SELECT id, balance
 		FROM accounts
@@ -31,11 +32,16 @@ func (r *AccountRepository) GetByID(ctx context.Context, id int64) (int64, strin
 	`
 
 	var accountID int64
-	var balance string
+	var balanceStr string
 
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&accountID, &balance)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&accountID, &balanceStr)
 	if err != nil {
-		return 0, "", err
+		return 0, decimal.Zero, err
+	}
+
+	balance, err := decimal.NewFromString(balanceStr)
+	if err != nil {
+		return 0, decimal.Zero, err
 	}
 
 	return accountID, balance, nil

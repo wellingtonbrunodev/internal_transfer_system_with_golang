@@ -3,27 +3,27 @@ package service
 import (
 	"context"
 	"testing"
-
+	"github.com/shopspring/decimal"
 	"github.com/wellingtonbrunodev/internal_transfer_system_with_golang/internal/domain"
 )
 
 type MockAccountRepository struct {
-	CreateFunc  func(ctx context.Context, id int64, balance string) error
-	GetByIDFunc func(ctx context.Context, id int64) (int64, string, error)
+	CreateFunc  func(ctx context.Context, id int64, balance decimal.Decimal) error
+	GetByIDFunc func(ctx context.Context, id int64) (int64, decimal.Decimal, error)
 }
 
-func (m *MockAccountRepository) Create(ctx context.Context, id int64, balance string) error {
+func (m *MockAccountRepository) Create(ctx context.Context, id int64, balance decimal.Decimal) error {
 	if m.CreateFunc != nil {
 		return m.CreateFunc(ctx, id, balance)
 	}
 	return nil
 }
 
-func (m *MockAccountRepository) GetByID(ctx context.Context, id int64) (int64, string, error) {
+func (m *MockAccountRepository) GetByID(ctx context.Context, id int64) (int64, decimal.Decimal, error) {
 	if m.GetByIDFunc != nil {
 		return m.GetByIDFunc(ctx, id)
 	}
-	return 0, "", nil
+	return 0, decimal.Zero, nil
 }
 
 
@@ -55,8 +55,8 @@ func TestCreateAccount_InvalidNegativeBalance(t *testing.T) {
 
 	err := service.CreateAccount(context.Background(), 1, "-50")
 
-	if err != domain.ErrInvalidAmountFormat {
-		t.Errorf("expected ErrInvalidAmountFormat, got %v", err)
+	if err != domain.ErrInvalidAmountValue {
+		t.Errorf("expected ErrInvalidAmountValue, got %v", err)
 	}
 }
 
@@ -65,14 +65,14 @@ func TestCreateAccount_Success(t *testing.T) {
 	called := false
 
 	mockRepo := &MockAccountRepository{
-		CreateFunc: func(ctx context.Context, id int64, balance string) error {
+		CreateFunc: func(ctx context.Context, id int64, balance decimal.Decimal) error {
 			called = true
 
 			if id != 1 {
 				t.Errorf("expected id 1, got %d", id)
 			}
 
-			if balance != "100" {
+			if !balance.Equal(decimal.NewFromInt(100)){
 				t.Errorf("expected balance 100, got %s", balance)
 			}
 
@@ -107,13 +107,13 @@ func TestGetAccount_InvalidID(t *testing.T) {
 
 func TestGetAccount_Success(t *testing.T) {
 	mockRepo := &MockAccountRepository{
-		GetByIDFunc: func(ctx context.Context, id int64) (int64, string, error) {
+		GetByIDFunc: func(ctx context.Context, id int64) (int64, decimal.Decimal, error) {
 
 			if id != 1 {
 				t.Errorf("expected id 1, got %d", id)
 			}
 
-			return 1, "500", nil
+			return 1, decimal.NewFromInt(500), nil
 		},
 	}
 
@@ -129,15 +129,15 @@ func TestGetAccount_Success(t *testing.T) {
 		t.Errorf("expected id 1, got %d", id)
 	}
 
-	if balance != "500" {
+	if !balance.Equal(decimal.NewFromInt(500)) {
 		t.Errorf("expected balance 500, got %s", balance)
 	}
 }
 
 func TestGetAccount_RepoError(t *testing.T) {
 	mockRepo := &MockAccountRepository{
-		GetByIDFunc: func(ctx context.Context, id int64) (int64, string, error) {
-			return 0, "", domain.ErrAccountNotFound
+		GetByIDFunc: func(ctx context.Context, id int64) (int64, decimal.Decimal, error) {
+			return 0, decimal.Zero, domain.ErrAccountNotFound
 		},
 	}
 

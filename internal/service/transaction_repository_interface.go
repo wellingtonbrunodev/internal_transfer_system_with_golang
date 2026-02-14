@@ -1,12 +1,15 @@
 package service
 
-import "context"
+import (
+	"context"
+	"github.com/shopspring/decimal"
+)
 
 type TransactionRepositoryInterface interface {
 	Transfer(
 		ctx context.Context,
 		sourceID int64,
 		destinationID int64,
-		amount string,
+		amount decimal.Decimal,
 	) error
 }

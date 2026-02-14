@@ -2,8 +2,7 @@ package service
 
 import (
 	"context"
-	"strconv"
-
+	"github.com/shopspring/decimal"
 	"github.com/wellingtonbrunodev/internal_transfer_system_with_golang/internal/domain"
 )
 
@@ -30,15 +29,14 @@ func (s *TransactionService) Transfer(
 		return domain.ErrSameAccountTransfer
 	}
 
-	parsedAmount, err := strconv.ParseFloat(amount, 64)
-
+	decimalAmount, err := decimal.NewFromString(amount)
 	if err != nil {
 		return domain.ErrInvalidAmountFormat
 	}
 
-	if parsedAmount <= 0 {
+	if decimalAmount.IsNegative() {
 		return domain.ErrInvalidAmountValue
 	}
 
-	return s.repo.Transfer(ctx, sourceID, destinationID, amount)
+	return s.repo.Transfer(ctx, sourceID, destinationID, decimalAmount)
 }

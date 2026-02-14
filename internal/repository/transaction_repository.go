@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"github.com/shopspring/decimal"
 	"github.com/wellingtonbrunodev/internal_transfer_system_with_golang/internal/domain"
 )
 
@@ -18,7 +19,7 @@ func (r *TransactionRepository) Transfer(
 	ctx context.Context,
 	sourceID int64,
 	destinationID int64,
-	amount string,
+	amount decimal.Decimal,
 ) error {
 
 	if sourceID == destinationID {
@@ -82,7 +83,7 @@ func (r *TransactionRepository) Transfer(
 	err = tx.QueryRowContext(
 		ctx,
 		`SELECT $1::numeric <= balance FROM accounts WHERE id = $2`,
-		amount,
+		amount.String(),
 		sourceID,
 	).Scan(&sufficient)
 	if err != nil {
@@ -97,7 +98,7 @@ func (r *TransactionRepository) Transfer(
 	_, err = tx.ExecContext(
 		ctx,
 		`UPDATE accounts SET balance = balance - $1 WHERE id = $2`,
-		amount,
+		amount.String(),
 		sourceID,
 	)
 	if err != nil {
@@ -108,7 +109,7 @@ func (r *TransactionRepository) Transfer(
 	_, err = tx.ExecContext(
 		ctx,
 		`UPDATE accounts SET balance = balance + $1 WHERE id = $2`,
-		amount,
+		amount.String(),
 		destinationID,
 	)
 	if err != nil {
@@ -122,7 +123,7 @@ func (r *TransactionRepository) Transfer(
 		 VALUES ('TRANSFER', $1, $2, $3)`,
 		sourceID,
 		destinationID,
-		amount,
+		amount.String(),
 	)
 	if err != nil {
 		return err

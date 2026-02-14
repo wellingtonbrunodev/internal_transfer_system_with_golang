@@ -2,23 +2,25 @@ package service
 
 import (
 	"context"
-	// "errors"
 	"testing"
-
+	"github.com/shopspring/decimal"
 	"github.com/wellingtonbrunodev/internal_transfer_system_with_golang/internal/domain"
 )
 
 type MockTransactionRepository struct {
-	TransferFunc func(ctx context.Context, sourceID, destinationID int64, amount string) error
+	TransferFunc func(ctx context.Context, sourceID, destinationID int64, amount decimal.Decimal) error
 }
 
 func (m *MockTransactionRepository) Transfer(
 	ctx context.Context,
 	sourceID int64,
 	destinationID int64,
-	amount string,
+	amount decimal.Decimal,
 ) error {
-	return m.TransferFunc(ctx, sourceID, destinationID, amount)
+	if m.TransferFunc != nil {
+		return m.TransferFunc(ctx, sourceID, destinationID, amount)
+	}
+	return nil
 }
 
 
@@ -71,7 +73,7 @@ func TestTransfer_InvalidAmountValue(t *testing.T) {
 
 func TestTransfer_Success(t *testing.T) {
 	mockRepo := &MockTransactionRepository{
-		TransferFunc: func(ctx context.Context, sourceID, destinationID int64, amount string) error {
+		TransferFunc: func(ctx context.Context, sourceID, destinationID int64, amount decimal.Decimal) error {
 			return nil
 		},
 	}

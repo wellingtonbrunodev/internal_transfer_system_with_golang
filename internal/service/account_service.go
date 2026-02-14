@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"strconv"
+	"github.com/shopspring/decimal"
 	"github.com/wellingtonbrunodev/internal_transfer_system_with_golang/internal/domain"
 )
 
@@ -19,18 +19,21 @@ func (s *AccountService) CreateAccount(ctx context.Context, id int64, initialBal
 		return domain.ErrInvalidAccountId
 	}
 
-	parsedAmount, err := strconv.ParseFloat(initialBalance, 64)
-
-	if err != nil || parsedAmount < 0 {
+	amount, err := decimal.NewFromString(initialBalance)
+	if err != nil {
 		return domain.ErrInvalidAmountFormat
 	}
 
-	return s.repo.Create(ctx, id, initialBalance)
+	if amount.IsNegative() {
+		return domain.ErrInvalidAmountValue
+	}
+
+	return s.repo.Create(ctx, id, amount)
 }
 
-func (s *AccountService) GetAccount(ctx context.Context, id int64) (int64, string, error) {
+func (s *AccountService) GetAccount(ctx context.Context, id int64) (int64, decimal.Decimal, error) {
 	if id <= 0 {
-		return 0, "", domain.ErrInvalidAccountId
+		return 0, decimal.Zero, domain.ErrInvalidAccountId
 	}
 
 	return s.repo.GetByID(ctx, id)
